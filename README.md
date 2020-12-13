@@ -1,5 +1,9 @@
 # Thespian
 
+![status: experimental](https://img.shields.io/badge/status-experimental-orange)
+[![crate](https://img.shields.io/crates/v/thespian.svg)](https://crates.io/crates/thespian)
+[![docs](https://docs.rs/thespian/badge.svg)](https://docs.rs/thespian)
+
 Asynchronous actor-based concurrency patterns inspired by Erlang.
 
 ## License
