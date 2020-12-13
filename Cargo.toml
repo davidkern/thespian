@@ -5,7 +5,7 @@ authors = ["David Kern <david@mju.io>"]
 edition = "2018"
 description = "Asynchronous actor-based concurrency patterns inspired by Erlang."
 repository = "https://github.com/davidkern/thespian/"
-license = "MIT or Apache-2.0"
+license = "MIT OR Apache-2.0"
 keywords = ["actor", "async", "concurrency", "tokio"]
 categories = ["concurrency"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
