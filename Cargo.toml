@@ -5,6 +5,7 @@ authors = ["David Kern <david@mju.io>"]
 edition = "2018"
 description = "Asynchronous actor-based concurrency patterns inspired by Erlang."
 repository = "https://github.com/davidkern/thespian/"
+documentation = "https://docs.rs/thespian/"
 license = "MIT OR Apache-2.0"
 keywords = ["actor", "async", "concurrency", "tokio"]
 categories = ["concurrency"]
