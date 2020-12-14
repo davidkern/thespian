@@ -26,12 +26,12 @@
 //! ## Example usage
 //!
 //! ```
-//! use thespian::{Actor, Process};
+//! use thespian::{Actor, VisitorProcess};
 //!
 //! #[tokio::main]
 //! pub async fn main() {
 //!     let (mut process, actor) =
-//!         Process::<State, State>::new_with_state(State::Alpha);
+//!         VisitorProcess::<State, State>::new_with_state(State::Alpha);
 //!     let toggle = Toggle::from(actor);
 //!
 //!     let (_process_result, _task_result) = tokio::join! {
@@ -84,4 +84,4 @@ mod link;
 mod process;
 
 pub use actor::Actor;
-pub use process::Process;
+pub use process::VisitorProcess;

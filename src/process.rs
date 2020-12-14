@@ -1,22 +1,22 @@
-use std::fmt::Debug;
-
 use crate::actor::Actor;
 use crate::link;
 
-/// `Process` holds the `Actor` state and sequentially processes
-/// calls sent from the `Actor`.
-pub struct Process<State, Reply>
-{
+pub struct ProcessState<State, Receiver> {
     state: State,
-    receiver: link::Receiver<State, Reply>,
+    receiver: Receiver,
 }
 
-impl<State, Reply> Process<State, Reply>
-    where
-        State: Debug,
+pub trait Process {
+    type State;
+    type Receiver;
+}
+
+pub type VisitorProcess<State, Message> = ProcessState<State, link::Receiver<State, Message>>;
+
+impl<State, Message> VisitorProcess<State, Message>
 {
     /// Creates a new (`Process`, `Actor`) pair given an initial state.
-    pub fn new_with_state(state: State) -> (Self, Actor<State, Reply>) {
+    pub fn new_with_state(state: State) -> (Self, Actor<State, Message>) {
         let (sender, receiver) = link::new();
         (
             Self {
