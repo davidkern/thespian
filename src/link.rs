@@ -4,9 +4,9 @@ use tokio::sync::{
         UnboundedReceiver,
     },
     oneshot,
+    mpsc,
 };
 use tokio::sync::mpsc::unbounded_channel;
-use tokio::sync::mpsc::error::SendError;
 
 pub fn new<State, Reply>() -> (Sender<State, Reply>, Receiver<State, Reply>) {
     let (sender, receiver) = unbounded_channel();
@@ -32,7 +32,10 @@ pub struct Sender<State, Reply>(UnboundedSender<Message<State, Reply>>);
 
 impl<State, Reply> Sender<State, Reply> {
     pub fn send(&self, msg: Message<State, Reply>) -> Result<(), SendError<Message<State, Reply>>> {
-        self.0.send(msg)
+        match self.0.send(msg) {
+            Ok(x) => Ok(x),
+            Err(e) => Err(SendError(e))
+        }
     }
 }
 
@@ -67,3 +70,5 @@ impl<Reply> ReplyReceiver<Reply> {
 }
 
 pub struct RecvError(oneshot::error::RecvError);
+
+pub struct SendError<T>(mpsc::error::SendError<T>);
