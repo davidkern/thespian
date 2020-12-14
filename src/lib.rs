@@ -26,11 +26,13 @@
 //! ## Example usage
 //!
 //! ```
+//! use thespian::{Actor, Process};
+//!
 //! #[tokio::main]
 //! pub async fn main() {
 //!     let (mut process, actor) =
-//!         thespian::Process::<State, State>::new_with_state(State::Alpha);
-//!     let toggle = Toggle(actor);
+//!         Process::<State, State>::new_with_state(State::Alpha);
+//!     let toggle = Toggle::from(actor);
 //!
 //!     let (_process_result, _task_result) = tokio::join! {
 //!         async move {
@@ -50,7 +52,13 @@
 //!     Beta,
 //! }
 //!
-//! struct Toggle(thespian::Actor<State, State>);
+//! struct Toggle(Actor<State, State>);
+//!
+//! impl From<Actor<State, State>> for Toggle {
+//!     fn from(actor: Actor<State, State>) -> Self {
+//!         Self(actor)
+//!     }
+//! }
 //!
 //! impl Toggle {
 //!     pub async fn get(&self) -> State {

@@ -1,12 +1,32 @@
 use std::fmt::Debug;
 
 use crate::link;
+use std::ops::Deref;
+use crate::link::Sender;
+
+pub struct ActorWrapper<T>(T);
+
+impl<T> Deref for ActorWrapper<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// `Actor` maintains a connection to its `Process` to allow
 /// `Actor` methods to be implemented via functions sent to
 /// the `Process`.
 pub struct Actor<State, Reply> {
     sender: link::Sender<State, Reply>
+}
+
+impl<State, Reply> From<link::Sender<State, Reply>> for Actor<State, Reply> {
+    fn from(sender: Sender<State, Reply>) -> Self {
+        Self {
+            sender,
+        }
+    }
 }
 
 impl<State, Reply> Clone for Actor<State, Reply> {
@@ -22,12 +42,6 @@ impl<State, Reply> Actor<State, Reply>
     where
         State: Debug,
 {
-    pub(crate) fn new_with_sender(sender: link::Sender<State, Reply>) -> Self {
-        Self {
-            sender,
-        }
-    }
-
     /// Executes a function in the `Process` with a reference to the state.
     pub fn call_ref(&self, caller: fn(&State)) {
         self.sender.send(link::Message::Ref(caller)).ok();

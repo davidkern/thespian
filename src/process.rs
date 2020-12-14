@@ -23,7 +23,7 @@ impl<State, Reply> Process<State, Reply>
                 state,
                 receiver,
             },
-            Actor::new_with_sender(sender)
+            Actor::from(sender)
         )
     }
 
