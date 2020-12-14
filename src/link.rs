@@ -7,6 +7,7 @@ use tokio::sync::{
 };
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::mpsc::error::SendError;
+use tokio::sync::oneshot::error::RecvError;
 
 pub fn new<State, Reply>() -> (Sender<State, Reply>, Receiver<State, Reply>) {
     let (sender, receiver) = unbounded_channel();
@@ -42,4 +43,23 @@ impl<State, Reply> Clone for Sender<State, Reply> {
     }
 }
 
-pub type ReplySender<Reply> = oneshot::Sender<Reply>;
+pub fn new_reply<Reply>() -> (ReplySender<Reply>, ReplyReceiver<Reply>) {
+    let (sender, receiver) = oneshot::channel();
+    (ReplySender(sender), ReplyReceiver(receiver))
+}
+
+pub struct ReplySender<Reply>(oneshot::Sender<Reply>);
+
+impl<Reply> ReplySender<Reply> {
+    pub fn send(self, msg: Reply) -> Result<(), Reply> {
+        self.0.send(msg)
+    }
+}
+
+pub struct ReplyReceiver<Reply>(oneshot::Receiver<Reply>);
+
+impl<Reply> ReplyReceiver<Reply> {
+    pub async fn recv(self) -> Result<Reply, RecvError> {
+        self.0.await
+    }
+}
