@@ -1,18 +1,7 @@
 use std::fmt::Debug;
 
 use crate::link;
-use std::ops::Deref;
 use crate::link::Sender;
-
-pub struct ActorWrapper<T>(T);
-
-impl<T> Deref for ActorWrapper<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 /// `Actor` maintains a connection to its `Process` to allow
 /// `Actor` methods to be implemented via functions sent to
