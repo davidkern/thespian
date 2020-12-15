@@ -82,6 +82,7 @@
 mod actor;
 mod link;
 mod process;
+mod scratchpad;
 
 pub use actor::Actor;
 pub use process::VisitorProcess;
