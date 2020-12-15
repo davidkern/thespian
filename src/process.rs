@@ -1,13 +1,13 @@
 use crate::actor::Actor;
 use crate::link;
 
-pub trait ProcessType {
+pub trait Process {
     type State;
     type Message;
     type Receiver;
 }
 
-pub struct Process<State, Receiver> {
+pub struct ProcessImpl<State, Receiver> {
     state: State,
     receiver: Receiver,
 }
@@ -19,9 +19,9 @@ pub enum VisitorMessage<State, Reply> {
     RefMutReply(fn(&State, link::ReplySender<Reply>), link::ReplySender<Reply>),
 }
 
-pub type VisitorProcess<State, Reply> = Process<State, link::Receiver<VisitorMessage<State, Reply>>>;
+pub type VisitorProcess<State, Reply> = ProcessImpl<State, link::Receiver<VisitorMessage<State, Reply>>>;
 
-impl<State, Reply> ProcessType for VisitorProcess<State, Reply> {
+impl<State, Reply> Process for VisitorProcess<State, Reply> {
     type State = State;
     type Message = VisitorMessage<State, Reply>;
     type Receiver = link::Receiver<Self::Message>;
