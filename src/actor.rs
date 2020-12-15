@@ -1,18 +1,17 @@
 use std::fmt::Debug;
 
 use crate::link;
-use crate::link::Sender;
 use crate::process::VisitorMessage;
 
 /// `Actor` maintains a connection to its `Process` to allow
 /// `Actor` methods to be implemented via functions sent to
 /// the `Process`.
 pub struct Actor<State, Reply> {
-    sender: link::Sender<VisitorMessage<State, Reply>>
+    sender: link::UnboundedSender<VisitorMessage<State, Reply>>
 }
 
-impl<State, Reply> From<link::Sender<VisitorMessage<State, Reply>>> for Actor<State, Reply> {
-    fn from(sender: Sender<VisitorMessage<State, Reply>>) -> Self {
+impl<State, Reply> From<link::UnboundedSender<VisitorMessage<State, Reply>>> for Actor<State, Reply> {
+    fn from(sender: link::UnboundedSender<VisitorMessage<State, Reply>>) -> Self {
         Self {
             sender,
         }

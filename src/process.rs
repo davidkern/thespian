@@ -19,19 +19,19 @@ pub enum VisitorMessage<State, Reply> {
     RefMutReply(fn(&State, link::ReplySender<Reply>), link::ReplySender<Reply>),
 }
 
-pub type VisitorProcess<State, Reply> = ProcessImpl<State, link::Receiver<VisitorMessage<State, Reply>>>;
+pub type VisitorProcess<State, Reply> = ProcessImpl<State, link::UnboundedReceiver<VisitorMessage<State, Reply>>>;
 
 impl<State, Reply> Process for VisitorProcess<State, Reply> {
     type State = State;
     type Message = VisitorMessage<State, Reply>;
-    type Receiver = link::Receiver<Self::Message>;
+    type Receiver = link::UnboundedReceiver<Self::Message>;
 }
 
 impl<State, Reply> VisitorProcess<State, Reply>
 {
     /// Creates a new (`Process`, `Actor`) pair given an initial state.
     pub fn new_with_state(state: State) -> (Self, Actor<State, Reply>) {
-        let (sender, receiver) = link::new();
+        let (sender, receiver) = link::UnboundedChannel::new();
         (
             Self {
                 state,

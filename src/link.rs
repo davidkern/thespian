@@ -1,29 +1,26 @@
-use tokio::sync::{
-    mpsc::{
-        UnboundedSender,
-        UnboundedReceiver,
-    },
-    oneshot,
-    mpsc,
-};
+use tokio::sync::{mpsc, oneshot};
 use tokio::sync::mpsc::unbounded_channel;
 
-pub fn new<Msg>() -> (Sender<Msg>, Receiver<Msg>) {
-    let (sender, receiver) = unbounded_channel();
-    (Sender(sender), Receiver(receiver))
+pub struct UnboundedChannel;
+
+impl UnboundedChannel {
+    pub fn new<Msg>() -> (UnboundedSender<Msg>, UnboundedReceiver<Msg>) {
+        let (sender, receiver) = unbounded_channel();
+        (UnboundedSender(sender), UnboundedReceiver(receiver))
+    }
 }
 
-pub struct Receiver<Msg>(UnboundedReceiver<Msg>);
+pub struct UnboundedReceiver<Msg>(mpsc::UnboundedReceiver<Msg>);
 
-impl<Msg> Receiver<Msg> {
+impl<Msg> UnboundedReceiver<Msg> {
     pub async fn recv(&mut self) -> Option<Msg> {
         self.0.recv().await
     }
 }
 
-pub struct Sender<Msg>(UnboundedSender<Msg>);
+pub struct UnboundedSender<Msg>(mpsc::UnboundedSender<Msg>);
 
-impl<Msg> Sender<Msg> {
+impl<Msg> UnboundedSender<Msg> {
     pub fn send(&self, msg: Msg) -> Result<(), SendError<Msg>> {
         match self.0.send(msg) {
             Ok(x) => Ok(x),
@@ -32,7 +29,7 @@ impl<Msg> Sender<Msg> {
     }
 }
 
-impl<Msg> Clone for Sender<Msg> {
+impl<Msg> Clone for UnboundedSender<Msg> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
