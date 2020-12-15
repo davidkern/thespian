@@ -8,30 +8,23 @@ use tokio::sync::{
 };
 use tokio::sync::mpsc::unbounded_channel;
 
-pub fn new<State, Reply>() -> (Sender<State, Reply>, Receiver<State, Reply>) {
+pub fn new<Msg>() -> (Sender<Msg>, Receiver<Msg>) {
     let (sender, receiver) = unbounded_channel();
     (Sender(sender), Receiver(receiver))
 }
 
-pub enum Message<State, Reply> {
-    Ref(fn(&State)),
-    RefMut(fn(&mut State)),
-    RefReply(fn(&State, ReplySender<Reply>), ReplySender<Reply>),
-    RefMutReply(fn(&State, ReplySender<Reply>), ReplySender<Reply>),
-}
+pub struct Receiver<Msg>(UnboundedReceiver<Msg>);
 
-pub struct Receiver<State, Reply>(UnboundedReceiver<Message<State, Reply>>);
-
-impl<State, Reply> Receiver<State, Reply> {
-    pub async fn recv(&mut self) -> Option<Message<State, Reply>> {
+impl<Msg> Receiver<Msg> {
+    pub async fn recv(&mut self) -> Option<Msg> {
         self.0.recv().await
     }
 }
 
-pub struct Sender<State, Reply>(UnboundedSender<Message<State, Reply>>);
+pub struct Sender<Msg>(UnboundedSender<Msg>);
 
-impl<State, Reply> Sender<State, Reply> {
-    pub fn send(&self, msg: Message<State, Reply>) -> Result<(), SendError<Message<State, Reply>>> {
+impl<Msg> Sender<Msg> {
+    pub fn send(&self, msg: Msg) -> Result<(), SendError<Msg>> {
         match self.0.send(msg) {
             Ok(x) => Ok(x),
             Err(e) => Err(SendError(e))
@@ -39,7 +32,7 @@ impl<State, Reply> Sender<State, Reply> {
     }
 }
 
-impl<State, Reply> Clone for Sender<State, Reply> {
+impl<Msg> Clone for Sender<Msg> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
@@ -53,8 +46,8 @@ pub fn new_reply<Reply>() -> (ReplySender<Reply>, ReplyReceiver<Reply>) {
 pub struct ReplySender<Reply>(oneshot::Sender<Reply>);
 
 impl<Reply> ReplySender<Reply> {
-    pub fn send(self, msg: Reply) -> Result<(), Reply> {
-        self.0.send(msg)
+    pub fn send(self, reply: Reply) -> Result<(), Reply> {
+        self.0.send(reply)
     }
 }
 
@@ -71,4 +64,4 @@ impl<Reply> ReplyReceiver<Reply> {
 
 pub struct RecvError(oneshot::error::RecvError);
 
-pub struct SendError<T>(mpsc::error::SendError<T>);
+pub struct SendError<Msg>(mpsc::error::SendError<Msg>);
