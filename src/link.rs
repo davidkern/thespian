@@ -1,16 +1,43 @@
 use tokio::sync::{mpsc, oneshot};
 use tokio::sync::mpsc::unbounded_channel;
+use std::marker::PhantomData;
 
-pub struct UnboundedChannel;
+pub trait Link {
+    type Message;
+    type Sender: LinkSender<Message=Self::Message>;
+    type Receiver: LinkReceiver<Message=Self::Message>;
 
-impl UnboundedChannel {
-    pub fn new<Msg>() -> (UnboundedSender<Msg>, UnboundedReceiver<Msg>) {
+    fn new() -> (Self::Sender, Self::Receiver);
+}
+
+pub trait LinkReceiver {
+    type Message;
+}
+
+pub trait LinkSender {
+    type Message;
+}
+
+pub struct UnboundedLink<Msg> {
+    _msg: PhantomData<Msg>,
+}
+
+impl<Msg> Link for UnboundedLink<Msg> {
+    type Message = Msg;
+    type Sender = UnboundedSender<Msg>;
+    type Receiver = UnboundedReceiver<Msg>;
+
+    fn new() -> (Self::Sender, Self::Receiver) {
         let (sender, receiver) = unbounded_channel();
         (UnboundedSender(sender), UnboundedReceiver(receiver))
     }
 }
 
 pub struct UnboundedReceiver<Msg>(mpsc::UnboundedReceiver<Msg>);
+
+impl<Msg> LinkReceiver for UnboundedReceiver<Msg> {
+    type Message = Msg;
+}
 
 impl<Msg> UnboundedReceiver<Msg> {
     pub async fn recv(&mut self) -> Option<Msg> {
@@ -27,6 +54,10 @@ impl<Msg> UnboundedSender<Msg> {
             Err(e) => Err(SendError(e))
         }
     }
+}
+
+impl<Msg> LinkSender for UnboundedSender<Msg> {
+    type Message = Msg;
 }
 
 impl<Msg> Clone for UnboundedSender<Msg> {

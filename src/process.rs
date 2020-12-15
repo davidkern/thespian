@@ -1,5 +1,6 @@
 use crate::actor::Actor;
 use crate::link;
+use crate::link::Link;
 
 pub trait Process {
     type State;
@@ -7,7 +8,10 @@ pub trait Process {
     type Receiver;
 }
 
-pub struct ProcessImpl<State, Receiver> {
+pub struct ProcessImpl<State, Receiver>
+where
+    Receiver: link::LinkReceiver,
+{
     state: State,
     receiver: Receiver,
 }
@@ -31,7 +35,7 @@ impl<State, Reply> VisitorProcess<State, Reply>
 {
     /// Creates a new (`Process`, `Actor`) pair given an initial state.
     pub fn new_with_state(state: State) -> (Self, Actor<State, Reply>) {
-        let (sender, receiver) = link::UnboundedChannel::new();
+        let (sender, receiver) = link::UnboundedLink::new();
         (
             Self {
                 state,
