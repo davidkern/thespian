@@ -1,6 +1,6 @@
 [package]
 name = "thespian"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["David Kern <david@mju.io>"]
 edition = "2018"
 description = "Asynchronous actor-based concurrency patterns inspired by Erlang."
