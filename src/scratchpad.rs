@@ -68,23 +68,27 @@
 
 use std::future::Future;
 
-struct Processor;
-
-impl Processor
-{
-    async fn start(f: impl Future<Output=()>) {
-    }
-}
-
-struct AlphaProcessor(Processor);
-
-impl AlphaProcessor {
-    async fn start() {
-        Processor::start(async {
-        });
-    }
+struct State;
+struct Link;
+struct Process<State> {
+    state: State,
+    link: Link,
 }
 
 async fn experiment() {
-    AlphaProcessor::start().await;
+    let state = State{};
+    let process = Process::new(state);
+}
+
+impl<State> Process<State> {
+    fn new(state: State) -> Self {
+        Process {
+            state,
+            link: Link{},
+        }
+    }
+
+    async fn process(&mut self, processor: fn (&mut Self)) {
+        
+    }
 }
