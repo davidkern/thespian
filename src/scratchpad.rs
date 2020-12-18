@@ -68,27 +68,69 @@
 
 use std::future::Future;
 
-struct State;
-struct Link;
-struct Process<State> {
-    state: State,
-    link: Link,
+enum Msg<Message> {
+    None,
+    Msg(Message),
 }
 
+struct Link<Message> {
+    msg: Msg<Message>,
+}
+
+struct Stage {
+}
+
+impl Stage {
+    // Spawn a future to poll to completion and return control flow immediately
+    fn spawn<Output>(&self, processor: impl Future<Output=Output>) {
+        // TODO: Handle spawning
+    }
+
+    // Spawn a link
+    fn link<Message>(&self) -> Link<Message> {
+        Link { msg: Msg::None }
+    }
+}
+
+struct Actor<Message> {
+    link: Link<Message>,
+}
+
+struct Process<Imp> {
+    imp: Imp,
+}
+
+impl<Imp> Process<Imp> {
+    fn spawn(stage: &Stage, imp: Imp) -> Actor<Process<Imp>> {
+        let process = Process { imp };
+        stage.spawn(process.run());
+        Actor { link: stage.link() }
+    }
+
+    async fn run(self) {
+        // TODO: Run the process        
+    }
+}
+
+
+// Usage
 async fn experiment() {
-    let state = State{};
-    let process = Process::new(state);
+    let stage = Stage{};
+    let a = Process::spawn(&stage, Toggle { state: false });
 }
 
-impl<State> Process<State> {
-    fn new(state: State) -> Self {
-        Process {
-            state,
-            link: Link{},
-        }
+struct Toggle {
+    state: bool,
+}
+
+impl Toggle {
+    fn get(&self) -> bool {
+        self.state
     }
 
-    async fn process(&mut self, processor: fn (&mut Self)) {
-        
+    fn toggle(&mut self) {
+        self.state = !self.state;
     }
 }
+
+type ToggleProcess = Process<Toggle>;
