@@ -2,6 +2,21 @@
 
 use tokio::sync::mpsc;
 
+pub struct Link<T>(Sender<T>, Receiver<T>);
+
+// Link
+
+impl<T> Link<T> {
+    pub fn new() -> Self {
+        let (tx, rx) = mpsc::channel(1);
+        Self(Sender(tx), Receiver(rx))
+    }
+
+    pub fn split(self) -> (Sender<T>, Receiver<T>) {
+        (self.0, self.1)
+    }
+}
+
 // Sender
 
 pub struct Sender<T>(mpsc::Sender<T>);
@@ -54,9 +69,7 @@ mod test {
 
     #[tokio::test]
     async fn send_and_receive() {
-        let (tx, rx) = mpsc::channel(1);
-        let sender = Sender::from(tx);
-        let mut receiver = Receiver::from(rx);
+        let (sender, mut receiver) = Link::new().split();
 
         let (_sent, _received) = tokio::join! {
             // send Msg::A from sender and Msg::B from a clone
