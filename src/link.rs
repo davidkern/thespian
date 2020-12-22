@@ -12,6 +12,11 @@ impl<T> Link<T> {
         Self(Sender(tx), Receiver(rx))
     }
 
+    pub fn new_with_buffer(capacity: usize) -> Self {
+        let (tx, rx) = mpsc::channel(capacity);
+        Self(Sender(tx), Receiver(rx))
+    }
+
     pub fn split(self) -> (Sender<T>, Receiver<T>) {
         (self.0, self.1)
     }
