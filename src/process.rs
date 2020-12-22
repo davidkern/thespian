@@ -39,14 +39,6 @@ pub struct Process<P: ProcessDef>(P);
 /// A `Process` consumes a Self::Input type of input, asynchronously processes
 /// that input, and returns a Self::Output type of output.
 impl<P: ProcessDef> Process<P> {
-    pub fn new(fut: impl Future<Output=Result<P::Output, ExitReason>>) {
-
-    }
-
-    pub fn spawn<Arena>(arena: Arena) {
-
-    }
-
     pub async fn run(input: P::Input, fut: impl Future<Output=Result<P::Output, ExitReason>>) -> Result<P::Output, ExitReason> {
         fut.await
     }
@@ -69,8 +61,8 @@ mod test {
         type Input = bool;
         type Output = ();
 
-        fn spawn(arena: Arena) -> Pid {
-            arena.spawn()
+        fn spawn(arena: &mut Arena) -> Pid {
+            
         }
     }
 
