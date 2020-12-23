@@ -4,6 +4,12 @@ use tokio::sync::mpsc;
 
 pub struct Link<T>(Sender<T>, Receiver<T>);
 
+impl<T> Default for Link<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Link
 
 impl<T> Link<T> {
@@ -19,6 +25,14 @@ impl<T> Link<T> {
 
     pub fn split(self) -> (Sender<T>, Receiver<T>) {
         (self.0, self.1)
+    }
+
+    pub async fn send(&self, value: T) {
+        self.0.send(value).await;
+    }
+
+    pub async fn recv(&mut self) -> Option<T> {
+        self.1.recv().await
     }
 }
 

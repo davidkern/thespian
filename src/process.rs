@@ -1,4 +1,5 @@
 use std::future::Future;
+use crate::link::Link;
 
 /// All processes are spawned in an `Arena`, which owns the
 /// process state and messages between processes.  When an arena is
@@ -7,12 +8,19 @@ use std::future::Future;
 /// Multiple arenas may exist in an application - processes in
 /// different scopes are entirely isolated from one another. Message passing
 /// between processes in linked scopes may be added in the future.
-pub struct Arena;
+#[derive(Default)]
+pub struct Arena<P: ProcessDef> {
+    link: Link<P>,
+}
 
-impl Arena {
-    /// Spawn a process by passing self into spawner
-    pub fn spawn(&mut self, spawner: fn(&mut Self) -> Pid) -> Pid {
-        spawner(self)
+impl<P: ProcessDef> Arena<P> {
+    pub async fn start() {
+
+    }
+
+    /// Spawn a process by delegating to ProcessDef::spawner
+    pub fn spawn(&mut self, process: P) {
+        self.link.send(process);
     }
 }
 
@@ -27,11 +35,9 @@ impl Arena {
 /// 
 /// TODO: Implement a version of this with async-trait and measure performance 
 /// against this implementation to quantify the above assertion.
-pub trait ProcessDef {
+pub trait ProcessDef: Sized + Default {
     type Input;
     type Output;
-
-    fn spawn(arena: &mut Arena) -> Pid;
 }
 
 pub struct Process<P: ProcessDef>(P);
@@ -55,19 +61,31 @@ pub enum ExitReason {
 mod test {
     use super::*;
 
-    struct Toggle(bool);
+    #[derive(Default)]
+    struct Swap(bool);
 
-    impl ProcessDef for Toggle {
-        type Input = bool;
-        type Output = ();
+    impl Swap {
+        pub async fn spawn(arena: &mut Arena<Self>) {
+            Process::spawn(arena, |arena| {
 
-        fn spawn(arena: &mut Arena) -> Pid {
-            
+            })
         }
+
+        pub async fn process(&mut self, input: bool) -> bool {
+            let original = self.0;
+            self.0 = input;
+            original
+        }
+    }
+
+    impl ProcessDef for Swap {
+        type Input = bool;
+        type Output = bool;
     }
 
     #[tokio::test]
     async fn start_a_process() {
-
+        let mut arena: Arena<Swap> = Default::default();
+        arena.spawn();
     }
 }
