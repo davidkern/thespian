@@ -54,6 +54,34 @@ where
     }
 }
 
+struct StageMsg;
+
+pub struct Stage {
+    link: link::Link<StageMsg>,
+}
+
+impl Stage {
+    pub fn new() -> Self {
+        Self {
+            link: link::Link::new(),
+        }
+    }
+
+    pub async fn start(&mut self)
+    {
+        
+    }
+
+    pub async fn spawn<Msg, F: FnMut(Msg) -> Fut, Fut: Future<Output=()>>(&mut self, f: F) -> Pid<Msg>
+    {
+        let (process, pid) = Process::new(f);
+
+        //self.link.send(f).await;
+
+        pid
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -66,6 +94,24 @@ mod test {
 
         tokio::join! {
             process.start(),
+            async move {
+                pid.send("first").await;
+                pid.send("second").await;
+                pid.send("third").await;
+            }
+        };
+    }
+
+    #[tokio::test]
+    async fn with_a_stage() {
+        let mut stage = Stage::new();
+
+        let pid = stage.spawn(|msg: &'static str| async move {
+            println!("process {}...", msg);
+        }).await;
+
+        tokio::join! {
+            stage.start(),
             async move {
                 pid.send("first").await;
                 pid.send("second").await;
