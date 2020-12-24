@@ -60,16 +60,16 @@ mod test {
 
     #[tokio::test]
     async fn start_a_process() {
-        let (mut process, pid) = Process::new(|msg: ()| async move {
-            println!("process...");
+        let (mut process, pid) = Process::new(|msg: &'static str| async move {
+            println!("process {}...", msg);
         });
 
         tokio::join! {
             process.start(),
             async move {
-                pid.send(()).await;
-                pid.send(()).await;
-                pid.send(()).await;
+                pid.send("first").await;
+                pid.send("second").await;
+                pid.send("third").await;
             }
         };
     }
