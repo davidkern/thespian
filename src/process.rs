@@ -4,6 +4,7 @@ use futures::StreamExt;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::marker::PhantomData;
+use tokio::sync::oneshot;
 use crate::link;
 
 pub struct Pid<Msg> {
@@ -54,16 +55,16 @@ where
     }
 }
 
-struct StageMsg;
+type BoxedProcessFuture = Box<dyn Future<Output=()>>;
 
 pub struct Stage {
-    link: link::Link<StageMsg>,
+    link: link::Link<BoxedProcessFuture>,
 }
 
 impl Stage {
     pub fn new() -> Self {
         Self {
-            link: link::Link::new(),
+            link: Default::default(),
         }
     }
 
@@ -74,9 +75,9 @@ impl Stage {
 
     pub async fn spawn<Msg, F: FnMut(Msg) -> Fut, Fut: Future<Output=()>>(&mut self, f: F) -> Pid<Msg>
     {
-        let (process, pid) = Process::new(f);
-
-        //self.link.send(f).await;
+        let (mut process, pid) = Process::new(f);
+        // let process_fut = Box::new(process.start());
+        // self.link.send(process_fut).await;
 
         pid
     }
