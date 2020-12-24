@@ -6,14 +6,13 @@ use std::task::{Context, Poll};
 use std::marker::PhantomData;
 use crate::link;
 
-
 pub struct Pid<Msg> {
     sender: link::Sender<Msg>,
 }
 
 impl<Msg> Pid<Msg> {
     pub async fn send(&self, msg: Msg) {
-        self.sender.send(msg);
+        self.sender.send(msg).await;
     }
 }
 
@@ -23,6 +22,7 @@ where
     Fut: Future<Output=()>
 {
     f: F,
+    receiver: link::Receiver<Msg>,
     _fut: PhantomData<Fut>,
     _msg: PhantomData<Msg>,
 }
@@ -32,21 +32,23 @@ where
     F: FnMut(Msg) -> Fut,
     Fut: Future<Output=()>
 {
-    pub fn new(f: F) -> Self {
-        Self {
+    pub fn new(f: F) -> (Self, Pid<Msg>) {
+        let (sender, receiver) = link::Link::new().split();
+        let pid = Pid{ sender };
+
+        let process = Self {
             f,
+            receiver,
             _fut: PhantomData,
             _msg: PhantomData,
-        }
+        };
+
+        (process, pid)
     }
 
     pub async fn start(&mut self)
     {
-        let (sender, mut receiver) = link::Link::new().split();
-
-        let pid = Pid{ sender };
-
-        while let Some(input) = receiver.recv().await {
+        while let Some(input) = self.receiver.recv().await {
             (self.f)(input).await
         }
     }
@@ -56,16 +58,19 @@ where
 mod test {
     use super::*;
 
-    struct Summation {
-        value: u64,
-    }
-
     #[tokio::test]
     async fn start_a_process() {
-        let mut process = Process::new(|msg: ()| async move {
-
+        let (mut process, pid) = Process::new(|msg: ()| async move {
+            println!("process...");
         });
 
-        process.start();
+        tokio::join! {
+            process.start(),
+            async move {
+                pid.send(()).await;
+                pid.send(()).await;
+                pid.send(()).await;
+            }
+        };
     }
 }
