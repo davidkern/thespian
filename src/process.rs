@@ -23,7 +23,6 @@ where
     Fut: Future<Output=()>
 {
     f: F,
-    receiver: link::Receiver<Msg>,
     _fut: PhantomData<Fut>,
     _msg: PhantomData<Msg>,
 }
@@ -33,38 +32,32 @@ where
     F: FnMut(Msg) -> Fut,
     Fut: Future<Output=()>
 {
-    pub fn new(f: F) -> (Self, Pid<Msg>) {
-        let (sender, receiver) = link::Link::new().split();
-        let pid = Pid{ sender };
-
+    pub fn new(f: F) -> Self {
         let process = Self {
             f,
-            receiver,
             _fut: PhantomData,
             _msg: PhantomData,
         };
 
-        (process, pid)
+        process
     }
 
-    pub async fn start(&mut self)
+    pub async fn start(&mut self, receiver: &mut link::Receiver::<Msg>)
     {
-        while let Some(input) = self.receiver.recv().await {
-            (self.f)(input).await
+        while let Some(msg) = receiver.recv().await {
+            (self.f)(msg).await
         }
     }
 }
 
-type BoxedProcessFuture = Box<dyn Future<Output=()>>;
-
 pub struct Stage {
-    link: link::Link<BoxedProcessFuture>,
+    //link: link::Link,
 }
 
 impl Stage {
     pub fn new() -> Self {
         Self {
-            link: Default::default(),
+            //link: Default::default(),
         }
     }
 
@@ -73,13 +66,17 @@ impl Stage {
         
     }
 
+
     pub async fn spawn<Msg, F: FnMut(Msg) -> Fut, Fut: Future<Output=()>>(&mut self, f: F) -> Pid<Msg>
     {
-        let (mut process, pid) = Process::new(f);
-        // let process_fut = Box::new(process.start());
-        // self.link.send(process_fut).await;
+        let _process = Process::new(f);
 
-        pid
+        let link: link::Link<Msg> = Default::default();
+        let (sender, _receiver) = link.split();
+
+        // Would need to send the receiver to the loop side of the stage here
+
+        Pid{ sender }
     }
 }
 
@@ -87,21 +84,21 @@ impl Stage {
 mod test {
     use super::*;
 
-    #[tokio::test]
-    async fn start_a_process() {
-        let (mut process, pid) = Process::new(|msg: &'static str| async move {
-            println!("process {}...", msg);
-        });
+    // #[tokio::test]
+    // async fn start_a_process() {
+    //     let (mut process, pid) = Process::new(|msg: &'static str| async move {
+    //         println!("process {}...", msg);
+    //     });
 
-        tokio::join! {
-            process.start(),
-            async move {
-                pid.send("first").await;
-                pid.send("second").await;
-                pid.send("third").await;
-            }
-        };
-    }
+    //     tokio::join! {
+    //         process.start(),
+    //         async move {
+    //             pid.send("first").await;
+    //             pid.send("second").await;
+    //             pid.send("third").await;
+    //         }
+    //     };
+    // }
 
     #[tokio::test]
     async fn with_a_stage() {
