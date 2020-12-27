@@ -1,60 +1,92 @@
 use std::future::Future;
 use std::marker::Send;
 
+#[cfg(test)]
+mod test {
+    use super::*;
 
-pub struct Pid<Msg> {
-    sender: tokio::sync::mpsc::Sender<Msg>,
-}
-
-impl<Msg> Pid<Msg> {
-    fn new(sender: tokio::sync::mpsc::Sender<Msg>) -> Self {
-        Self {
-            sender,
+    pub enum Foo {
+        A,
+        B,
+    }
+    
+    impl Process for Foo {
+        fn spawn() -> PendingPid<Self> {
+            Stage::spawn(|msg: Self| async move {
+                match msg {
+                    Self::A => {
+                        println!("A!");
+                    },
+                    Self::B => {
+                        println!("B!");
+                    }
+                }
+            })
         }
     }
+    
+    #[tokio::test]
+    async fn example() {
+        let pid = Foo::spawn().pid().await;
+        pid.send(Foo::A).await;
+        pid.send(Foo::B).await;
+
+        // This send will never be processed, but forces the previous
+        // message to be processed.  Program exits before the process
+        // receives this one, and can't fix that until there is a way
+        // to await process exit.
+        pid.send(Foo::B).await;
+    }    
 }
 
-pub struct Stage {
+// Implementation
+
+pub trait Process: Sized {
+    fn spawn() -> PendingPid<Self>;
 }
 
-pub trait Process<Msg: Send> {
-    fn sync_spawn(stage: &mut Stage, sender: tokio::sync::oneshot::Sender<Pid<Msg>>);
-}
+pub struct Stage;
 
 impl Stage {
-    pub async fn spawn<Msg: Send>(&mut self, process: impl Process<Msg>) -> Pid<Msg> {
-        let (pid_sender, pid_receiver) = tokio::sync::oneshot::channel::<Pid<Msg>>();
-
-        process.sync_spawn(self, pid_sender);
-    
-        pid_receiver.await.unwrap()
-    }
-
-    fn sync_spawn<F, Fut, Msg>(&mut self, pid_sender: tokio::sync::oneshot::Sender<Pid<Msg>>, mut f: F)
+    pub fn spawn<P: Process, F, Fut>(mut f: F) -> PendingPid<P>
     where
-        F: FnMut(Msg) -> Fut + Send + 'static,
-        Fut: Future<Output=()> + Send + 'static,
-        Fut::Output: Send,
-        Msg: Send + 'static,
+        P: Send + 'static,
+        F: FnMut(P) -> Fut + Send + 'static,
+        Fut: Future<Output=()> + Send + 'static
     {
+        let (pid_sender, pid_receiver) = tokio::sync::oneshot::channel::<Pid<P>>();
+
         tokio::spawn(async move {
-            let (tx, mut rx) = tokio::sync::mpsc::channel::<Msg>(1);
-            pid_sender.send(Pid::new(tx)).ok();
-            while let Some(msg) = rx.recv().await {
-                f(msg).await
+            let (sender, mut receiver) = tokio::sync::mpsc::channel::<P>(1);
+            pid_sender.send(Pid{ sender }).ok();
+
+            while let Some(msg) = receiver.recv().await {
+                f(msg).await;
             }
+
+            println!("exiting");
         });
+
+        PendingPid{ receiver: pid_receiver }
     }
 }
 
-// Example Usage
+pub struct PendingPid<P: Process> {
+    receiver: tokio::sync::oneshot::Receiver<Pid<P>>,
+}
 
-pub struct MyProcess;
+impl<P: Process> PendingPid<P> {
+    pub async fn pid(self) -> Pid<P> {
+        self.receiver.await.unwrap()
+    }
+}
 
-impl Process<bool> for MyProcess {
-    fn sync_spawn(stage: &mut Stage, sender: tokio::sync::oneshot::Sender<Pid<bool>>) {
-        stage.sync_spawn(sender, |_msg: bool| async move {
+pub struct Pid<P: Process> {
+    sender: tokio::sync::mpsc::Sender<P>,
+}
 
-        });
+impl<P: Process> Pid<P> {
+    pub async fn send(&self, msg: P) {
+        self.sender.send(msg).await.ok();
     }
 }
