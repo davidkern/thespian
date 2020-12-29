@@ -11,6 +11,8 @@ pub fn log(msg: &str) {
     println!("[{}] {}", timestamp.as_millis(), msg);
 }
 
+pub struct Context { }
+
 pub struct Running { }
 
 impl Running {
@@ -39,7 +41,7 @@ impl Drop for Running {
 
 pub enum Reason {
     Normal,
-    Abnormal,
+    Fault,
 }
 
 pub struct Exited {
@@ -60,12 +62,15 @@ pub struct Actor {
 impl Actor {
     fn spawn<ActorFn, Fut>(actor_fn: ActorFn) -> Actor
     where
-        ActorFn: Fn(Running) -> Fut,
-        Fut: std::future::Future<Output=Exited> + Send + 'static
+        ActorFn: Fn(Context) -> Fut,
+        Fut: std::future::Future<Output=Reason> + Send + 'static
     {
         let running = Running::new();
-        let fut = actor_fn(running);
-        smol::spawn(fut).detach();    
+        let context = Context{ };
+        let actor_fut = actor_fn(context);
+        smol::spawn(async move {
+            running.run(actor_fut).await
+        }).detach();    
 
         Actor {
             //fut: Box::new(actor_fn(context)),
@@ -81,8 +86,8 @@ impl Spec {
     /// Creates a new Spec, which spawns actors from the ActorFn.
     pub fn new<ActorFn, Fut>(actor_fn: ActorFn) -> Spec
     where
-        ActorFn: Fn(Running) -> Fut + 'static,
-        Fut: std::future::Future<Output=Exited> + Send + 'static,
+        ActorFn: Fn(Context) -> Fut + 'static,
+        Fut: std::future::Future<Output=Reason> + Send + 'static,
     {
         Spec {
             spawn_fn: Box::new(move || {
@@ -107,13 +112,9 @@ mod test {
     fn spawn_actor() {
         log("starting");
 
-        let spec = Spec::new(|running| async move {
-            running.run(async {
-                log("spawned a thing");
-                Timer::after(Duration::from_millis(10)).await;
-
-                Reason::Normal
-            }).await
+        let spec = Spec::new(|context| async move {
+            log("spawned a thing");
+            Reason::Normal
         });
 
         log("about to spawn");
