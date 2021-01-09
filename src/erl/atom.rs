@@ -20,95 +20,70 @@
 //! provided for display and debugging purposes, however they should not be
 //! considered a stable format - in the future the format may be changed.
 //!
-//! Example:
-//! 
-//! ```rust
-//! #[macro_use] extern crate thespian;
-//! use thespian::atom;
-//! 
-//! atom!(A);                       // private atom named A
-//! atom!(pub B);                   // public atom named B
-//! 
-//! pub mod other {
-//!     use thespian::atom;
-//! 
-//!     atom!(pub A);               // another atom named A
-//! }
-//! 
-//! fn main() {
-//!     assert_eq!(A, A);                       // atoms equal themselves
-//!     assert_ne!(A, B);                       // but don't equal each other
-//!     assert_ne!(A, other::A);                // not equal: same names but different modules
-//!
-//!     assert_eq!("rust_out::other::A", other::A.name());        // full name of the atom
-//!     assert_eq!("A", other::A.short_name()); // short name of atom
-//! }
 //! ```
 
+pub use thespian_macros::atom;
+
+#[derive(Debug, Eq, Copy, Clone, PartialEq)]
+pub struct Atom { pub id: usize }
+
 /// A symbolic atom with O(1) equality checks
-#[derive(Debug, Eq, Copy, Clone)]
-pub struct Atom(
-    pub &'static str,
-);
+// pub struct Atom(
+//     pub &'static str,
+// );
 
-impl PartialEq for Atom {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 as *const str == other.0 as *const str
-    }
-}
+// impl PartialEq for Atom {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.0 as *const str == other.0 as *const str
+//     }
+// }
 
-impl Atom {
-    /// Returns the full module-scoped name of the Atom
-    pub fn name(&self) -> &'static str {
-        self.0
-    }
+// impl Atom {
+//     /// Returns the full module-scoped name of the Atom
+//     pub fn name(&self) -> &'static str {
+//         self.0
+//     }
 
-    /// Returns the short name (sans module) of the Atom
-    pub fn short_name(&self) -> &'static str {
-        self.0.rsplit(":").next().unwrap()
-    }
-}
+//     /// Returns the short name (sans module) of the Atom
+//     pub fn short_name(&self) -> &'static str {
+//         self.0.rsplit(":").next().unwrap()
+//     }
+// }
 
-#[macro_export]
-macro_rules! atom {
-    ( $visibility:vis $id:ident ) => {
-        $visibility const $id: $crate::erl::atom::Atom =
-            $crate::erl::atom::Atom(std::concat!(std::module_path!(), "::", std::stringify!($id)));
-    }
-}
+// #[macro_export]
+// macro_rules! atom {
+//     ( $visibility:vis $id:ident ) => {
+//         $visibility const $id: $crate::erl::atom::Atom =
+//             $crate::erl::atom::Atom(std::concat!(std::module_path!(), "::", std::stringify!($id)));
+//     }
+// }
 
 #[cfg(test)]
 mod test {
+    use crate as thespian;
     use super::*;
 
-    atom!(A);
-    atom!(B);
+    const A: Atom = atom!(a);
+    const B: Atom = atom!(b);
+    const LONG: Atom = atom!(abcdefghijklmno);  // longest identifier on 64-bit
 
     pub mod other {
-        atom!(pub A);
+        use crate as thespian;
+        use super::{atom, Atom};
+
+        pub const A: Atom = atom!(a);
     }
 
     /// An atom equals itself but no others.
-    /// Atoms defined in other modules with the same name are not equal.
     #[test]
     fn equality() {
         assert_eq!(A, A);
+        assert_eq!(A, other::A);
+        assert_eq!(LONG, atom!(abcdefghijklmno));
 
         assert_ne!(A, B);
-        assert_ne!(A, other::A);
     }
 
-
-    #[test]
-    fn naming() {
-        // short names
-        assert_eq!("A", A.short_name());
-        assert_eq!("B", B.short_name());
-        assert_eq!("A", other::A.short_name());
-
-        // names
-        assert_eq!("thespian::erl::atom::test::A", A.name());
-    }
 
     #[test]
     fn copying() {

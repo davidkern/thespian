@@ -11,6 +11,11 @@
 //     unsafe_code,
 //     unstable_features,
 //     unused_import_braces, unused_qualifications)]
+use crate as thespian;
+use thespian_macros::atom;
+
+
+pub const A: erl::atom::Atom = atom!(a);
 
 /// actor system
 pub mod actor;
