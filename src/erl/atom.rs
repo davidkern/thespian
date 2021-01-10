@@ -1,62 +1,15 @@
 //! Symbolic constant atoms with O(1) comparison and copies.
-//! 
-//! Because of difficulty (impossibility?) of keeping state in Rust macros,
-//! Atoms must be defined before they are used.
-//! 
-//! Definition is via the macro `atom!(IDENT)` which defines an Atom as a
-//! constant named `IDENT` in the calling module.  Note that atoms defined
-//! with the same `IDENT` in different modules are different atoms! `IDENT`
-//! should follow the rules for naming constants: letters [A-Z], underscores,
-//! and [0-9] not as the first character.
-//! 
-//! Internally, atoms are named with their fully-qualified module path.
-//! In other words, calling `atom!(pub A)` in the root module of crate "foo"
-//! will expand to `pub const A: Atom = Atom { name: "foo:A" };` This ensures
-//! that distinctly defined atoms are unique, since it is not possible to have
-//! two constants with the same name in the same module.
-//! 
-//! Comparison of atoms is done by comparing the internal static string pointers,
-//! rather than comparing the strings themselves.  Short and full names are
-//! provided for display and debugging purposes, however they should not be
-//! considered a stable format - in the future the format may be changed.
-//!
-//! ```
 
+// Re-export the atom!(...) macro.
+// Tee Atom struct and tests are defined in this module, but the
+// atom! proc-macro must be defined in another crate.
 pub use thespian_macros::atom;
 
+/// An Atom is a cheaply clonable instance which represents
+/// a named concept. Two atoms are identical if they have
+/// identical names.
 #[derive(Debug, Eq, Copy, Clone, PartialEq)]
 pub struct Atom { pub id: usize }
-
-/// A symbolic atom with O(1) equality checks
-// pub struct Atom(
-//     pub &'static str,
-// );
-
-// impl PartialEq for Atom {
-//     fn eq(&self, other: &Self) -> bool {
-//         self.0 as *const str == other.0 as *const str
-//     }
-// }
-
-// impl Atom {
-//     /// Returns the full module-scoped name of the Atom
-//     pub fn name(&self) -> &'static str {
-//         self.0
-//     }
-
-//     /// Returns the short name (sans module) of the Atom
-//     pub fn short_name(&self) -> &'static str {
-//         self.0.rsplit(":").next().unwrap()
-//     }
-// }
-
-// #[macro_export]
-// macro_rules! atom {
-//     ( $visibility:vis $id:ident ) => {
-//         $visibility const $id: $crate::erl::atom::Atom =
-//             $crate::erl::atom::Atom(std::concat!(std::module_path!(), "::", std::stringify!($id)));
-//     }
-// }
 
 #[cfg(test)]
 mod test {
@@ -77,14 +30,21 @@ mod test {
     /// An atom equals itself but no others.
     #[test]
     fn equality() {
+        // Reflexive
         assert_eq!(A, A);
+
+        // Equality between instances
         assert_eq!(A, other::A);
+
+        // The longest-named atom (15 characters)
         assert_eq!(LONG, atom!(abcdefghijklmno));
 
+        // Disjoint
         assert_ne!(A, B);
     }
 
 
+    /// An atom may be cloned and still equals itself.
     #[test]
     fn copying() {
         let a_clone = A.clone();
