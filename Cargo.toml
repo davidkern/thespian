@@ -18,9 +18,9 @@ maintenance = { status = "experimental" }
 criterion = "0.3.3"
 
 [dependencies]
-async-task = "4.0.3"
+# async-task = "4.0.3"
 smol = "1.2.5"
-thiserror = "1.0.23"
+# thiserror = "1.0.23"
 thespian_macros = { path = "../thespian_macros" }
 
 [[bench]]
