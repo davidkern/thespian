@@ -1,27 +1,37 @@
 //! Attempting to mimic Erlang processes:
 //!  - process can exit normally or with error
-//!  - linked process will exit with same error
-//!  - unless the linked process is set to trap exits
+//!  - linked processes will exit with same error
+//!  - unless the linked process is set to trap exits, in which case
+//!    it receives the error as a message
 //!  - a process may be monitored, sending DOWN messages on exit
+//! 
+//! Issues to solve:
+//!  - smallest wrapper around a process function to erase its type
+//!  - determining ergonomic process definition and runtime strategy
+//!  - api for sending/receiving strongly-typed user-defined messages
 use std::future::Future;
+
+// pub fn process<F, Fut>(process_fn: F) -> (Pid, impl Future<Output=Exit>)
+// where
+//     F: Fn(Mailbox) -> Fut + 'static,
+//     Fut: Future<Output=Exit> + Send + 'static
+// {   
+//     let (pid, mailbox) = create();
+//     (pid, process_fn(mailbox))
+// }
 
 /// Spawns a new process from the provided process function
 pub fn spawn<F, Fut>(process_fn: F) -> Pid
 where
-    F: Fn(Mailbox) -> Fut + 'static,
+    F: Fn(Process) -> Fut,
     Fut: Future<Output=Exit> + Send + 'static
 {
     // keep code minimal here to reduce compiled binary size
-    let (pid, mailbox) = create();
-    smol::spawn((process_fn)(mailbox)).detach();
+    let process = Process::new();
+    let pid = process.pid.clone();
+    smol::spawn((process_fn)(process)).detach();
 
     pid
-}
-
-/// Creates (Pid, Mailbox) for the spawn function
-fn create() -> (Pid, Mailbox) {
-    let (sender, receiver) = smol::channel::unbounded();
-    (Pid::new(sender), Mailbox::new(receiver))
 }
 
 pub enum Exit {
@@ -29,13 +39,17 @@ pub enum Exit {
 }
 
 pub struct Process {
-    pub mailbox: Mailbox,
+    pub pid: Pid,           // storing Pid allows sending to self
+    pub mailbox: Mailbox,   // incoming messages
 }
 
 impl Process {
-    pub fn new(mailbox: Mailbox) -> Self {
+    pub fn new() -> Self {
+        let channel = smol::channel::unbounded();
+    
         Process {
-            mailbox,
+            pid: Pid::new(channel.0),
+            mailbox: Mailbox::new(channel.1),
         }
     }
 }
@@ -56,6 +70,7 @@ pub async fn pending(ctx: &Process) -> Exit {
 pub struct Msg;
 
 /// Process Handle
+#[derive(Clone)]
 pub struct Pid {
     sender: smol::channel::Sender<Msg>,
 }
@@ -80,8 +95,10 @@ impl Mailbox {
         }
     }
 
+    /// Receives a `Msg`, or `None`: indicating that the channel is closed.
+    /// TODO: recv() should be infallible
     pub async fn recv(&self) -> Option<Msg> {
-        todo!()
+        self.receiver.recv().await.ok()
     }
 }
 
@@ -90,6 +107,19 @@ mod test {
     use super::*;
 
     #[test]
-    fn kill_process() {
+    fn spawn_process() {
+        spawn(|_process| async move {
+            Exit::Normal
+        });
+    }
+
+    // TODO: Lifetime problems with receiving...
+    #[test]
+    fn receive_message() {
+        let pid = spawn(|process| async move {
+            match process.mailbox.recv().await {
+                _ => Exit::Normal 
+            }
+        });
     }
 }
