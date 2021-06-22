@@ -55,7 +55,7 @@ impl Process {
 }
 
 /// Run forever until killed
-pub async fn pending(ctx: &Process) -> Exit {
+pub async fn pending(ctx: Process) -> Exit {
     // Define process state here
 
     // Normal process message loop
@@ -113,7 +113,6 @@ mod test {
         });
     }
 
-    // TODO: Lifetime problems with receiving...
     #[test]
     fn receive_message() {
         let pid = spawn(|process| async move {
@@ -121,5 +120,9 @@ mod test {
                 _ => Exit::Normal 
             }
         });
+    }
+
+    #[test]
+    fn typed_messaging() {
     }
 }

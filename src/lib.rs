@@ -22,3 +22,6 @@ pub mod actor;
 
 /// concepts adapted from Erlang OTP
 pub mod erl;
+
+/// refining workers
+pub mod next;
