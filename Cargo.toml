@@ -19,11 +19,11 @@ criterion = "0.3.3"
 
 [dependencies]
 anyhow = "1.0.38"
-concurrent-queue = "1.2.2"
-event-listener = "2.5.1"
-smol = "1.2.5"
+# concurrent-queue = "1.2.2"
+# event-listener = "2.5.1"
+# smol = "1.2.5"
 # thiserror = "1.0.23"
-thespian_macros = { path = "../thespian_macros" }
+# thespian_macros = { path = "../thespian_macros" }
 
 [[bench]]
 name = "general"
