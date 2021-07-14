@@ -1,18 +1,7 @@
-[package]
-name = "thespian"
-version = "0.2.0"
-authors = ["David Kern <david@mju.io>"]
-edition = "2018"
-description = "Asynchronous actor-based concurrency patterns inspired by Erlang."
-repository = "https://github.com/davidkern/thespian/"
-documentation = "https://docs.rs/thespian/"
-license = "MIT OR Apache-2.0"
-keywords = ["actor", "async", "concurrency", "tokio"]
-categories = ["concurrency"]
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[badges]
-maintenance = { status = "experimental" }
-
-[dependencies]
-tokio = { version = "0.3.5", features = ["full"] }
+[workspace]
+members = [
+    "thespian",
+    "thespian-bin",
+    "thespian-rt",
+    "thespian-tui"
+]
