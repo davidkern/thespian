@@ -2,6 +2,7 @@
 members = [
     "thespian",
     "thespian-bin",
+    "thespian-macro",
     "thespian-rt",
     "thespian-tui"
 ]
