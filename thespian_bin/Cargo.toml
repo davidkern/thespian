@@ -1,5 +1,5 @@
 [package]
-name = "thespian-bin"
+name = "thespian_bin"
 version = "0.1.0"
 authors = ["David Kern <david@mju.io>"]
 edition = "2018"

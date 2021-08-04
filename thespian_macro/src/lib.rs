@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, AttributeArgs, ItemTrait};
-use quote::{quote, quote_spanned};
+use quote::quote;
 
 #[proc_macro_attribute]
 pub fn thespian(args: TokenStream, input: TokenStream) -> TokenStream {

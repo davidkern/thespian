@@ -1,8 +1,8 @@
 [workspace]
 members = [
     "thespian",
-    "thespian-bin",
-    "thespian-macro",
-    "thespian-rt",
-    "thespian-tui"
+    "thespian_bin",
+    "thespian_macro",
+    "thespian_rt",
+    "thespian_tui"
 ]
