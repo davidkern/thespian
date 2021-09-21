@@ -1,8 +1,8 @@
 use crate::{Type};
 
 pub unsafe trait Object {
-    fn object_type() -> &'static Type where Self: Sized;
-    fn get_type(&self) -> &'static Type;
+    fn object_type<'a>() -> &'static dyn Type where Self: Sized;
+    fn get_type(&self) -> &'static dyn Type;
 }
 
 impl dyn Object {
