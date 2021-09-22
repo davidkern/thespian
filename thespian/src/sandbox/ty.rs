@@ -1,4 +1,4 @@
-use crate::{Field, Kind};
+use crate::sandbox::{Field, Kind};
 
 pub unsafe trait Type: Sync + Send {
     fn name(&self) -> &str;

@@ -1,4 +1,4 @@
-use crate::{Type};
+use crate::sandbox::{Type};
 
 pub unsafe trait Object {
     fn object_type<'a>() -> &'static dyn Type where Self: Sized;
