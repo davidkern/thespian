@@ -17,12 +17,12 @@ pub trait Inc { fn inc(&mut self); }
 pub trait Dec { fn dec(&mut self); }
 pub trait Get { fn get(&self) -> u32; }
 
-struct Counter {
+pub struct Counter {
     counter: u32,
 }
 
 impl Counter {
-    fn foo() { }
+    pub fn foo() { }
 }
 
 impl Inc for Counter { fn inc(&mut self) { self.counter += 1; } }
