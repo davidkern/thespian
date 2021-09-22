@@ -48,7 +48,7 @@ mod test {
                 Kind::U32
             }
 
-            fn get(&self, object: &dyn Object) -> Result<&dyn Object, ()> {
+            fn get(&self, _object: &dyn Object) -> Result<&dyn Object, ()> {
                 Err(())
             }
         }
