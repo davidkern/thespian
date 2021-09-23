@@ -10,17 +10,19 @@ pub unsafe trait Typed {
     fn typed(&self) -> &'static dyn Type;
 }
 
-/// A wrapper type around T to which allows specialization for the Typed trait
+/// A wrapper type around T which allows specialization for the Typed trait
 /// via autoref functionality:
 /// https://github.com/dtolnay/case-studies/tree/master/autoref-specialization.
 pub struct TypeWrapper<T: ?Sized>(PhantomData<T>);
 
 impl<T: ?Sized> TypeWrapper<T> {
-    pub fn from_type() -> Self {
+    pub fn new() -> Self {
         TypeWrapper(PhantomData)
     }
+}
 
-    pub fn from_value(_: &T) -> Self {
+impl<T: ?Sized> From<&T> for TypeWrapper<T> {
+    fn from(_: &T) -> Self {
         TypeWrapper(PhantomData)
     }
 }
@@ -49,7 +51,7 @@ macro_rules! typed {
     ($t:ty) => {
         {
             use crate::reflection::{Typed, TypeWrapper};
-            (&TypeWrapper::<$t>::from_type()).typed()
+            (&TypeWrapper::<$t>::new()).typed()
         }
     };
 }
@@ -60,7 +62,7 @@ macro_rules! value_typed {
     ($e:expr) => {
         {
             use crate::reflection::{Typed, TypeWrapper};
-            (&TypeWrapper::from_value(&$e)).typed()
+            (&TypeWrapper::from(&$e)).typed()
         }
     };
 }
