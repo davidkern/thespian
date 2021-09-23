@@ -1,7 +1,7 @@
-macro_rules! typed {
+macro_rules! impl_typed {
     ($identifier:ident) => {
         pub mod $identifier {
-            use crate::reflection::{Type, Typed};
+            use crate::reflection::{Type, Typed, TypeWrapper};
         
             struct Ty;
             static TY: Ty = Ty;
@@ -12,54 +12,106 @@ macro_rules! typed {
                 }
             }
             
-            unsafe impl Typed for $identifier {
-                fn typed() -> &'static dyn Type {
+            unsafe impl Typed for TypeWrapper<$identifier> {
+                fn typed(&self) -> &'static dyn Type {
                     &TY
                 }
             }    
-        }        
+        }
     }
 }
 
-typed!(bool);
-typed!(char);
-typed!(f32);
-typed!(f64);
-typed!(i8);
-typed!(i16);
-typed!(i32);
-typed!(i64);
-typed!(i128);
-typed!(isize);
-typed!(str);
-typed!(u8);
-typed!(u16);
-typed!(u32);
-typed!(u64);
-typed!(u128);
-typed!(usize);
+impl_typed!(bool);
+impl_typed!(char);
+impl_typed!(f32);
+impl_typed!(f64);
+impl_typed!(i8);
+impl_typed!(i16);
+impl_typed!(i32);
+impl_typed!(i64);
+impl_typed!(i128);
+impl_typed!(isize);
+impl_typed!(str);
+impl_typed!(u8);
+impl_typed!(u16);
+impl_typed!(u32);
+impl_typed!(u64);
+impl_typed!(u128);
+impl_typed!(usize);
 
 #[cfg(test)]
 mod test {
-    use crate::reflection::Typed;
+    use crate::{typed, value_typed};
 
     #[test]
     fn typed_primitives() {
-        assert_eq!(bool::typed().identifier(), "bool");
-        assert_eq!(f32::typed().identifier(), "f32");
-        assert_eq!(f64::typed().identifier(), "f64");
-        assert_eq!(i8::typed().identifier(), "i8");
-        assert_eq!(i16::typed().identifier(), "i16");
-        assert_eq!(i32::typed().identifier(), "i32");
-        assert_eq!(i64::typed().identifier(), "i64");
-        assert_eq!(i128::typed().identifier(), "i128");
-        assert_eq!(isize::typed().identifier(), "isize");
-        assert_eq!(str::typed().identifier(), "str");
-        assert_eq!(u8::typed().identifier(), "u8");
-        assert_eq!(u16::typed().identifier(), "u16");
-        assert_eq!(u32::typed().identifier(), "u32");
-        assert_eq!(u64::typed().identifier(), "u64");
-        assert_eq!(u128::typed().identifier(), "u128");
-        assert_eq!(usize::typed().identifier(), "usize");
+        assert_eq!(typed!(bool).identifier(), "bool");
+        assert_eq!(typed!(f32).identifier(), "f32");
+        assert_eq!(typed!(f64).identifier(), "f64");
+        assert_eq!(typed!(i8).identifier(), "i8");
+        assert_eq!(typed!(i16).identifier(), "i16");
+        assert_eq!(typed!(i32).identifier(), "i32");
+        assert_eq!(typed!(i64).identifier(), "i64");
+        assert_eq!(typed!(i128).identifier(), "i128");
+        assert_eq!(typed!(isize).identifier(), "isize");
+        assert_eq!(typed!(str).identifier(), "str");
+        assert_eq!(typed!(u8).identifier(), "u8");
+        assert_eq!(typed!(u16).identifier(), "u16");
+        assert_eq!(typed!(u32).identifier(), "u32");
+        assert_eq!(typed!(u64).identifier(), "u64");
+        assert_eq!(typed!(u128).identifier(), "u128");
+        assert_eq!(typed!(usize).identifier(), "usize");
+    }
+
+    #[test]
+    fn typed_unknown() {
+        struct Untyped;
+
+        assert_eq!(typed!(Untyped).identifier(), "<unknown>");
+    }
+
+    #[test]
+    fn typed_primitive_values() {
+        let v_bool: bool = Default::default();
+        let v_f32: f32 = Default::default();
+        let v_f64: f64 = Default::default();
+        let v_i8: i8 = Default::default();
+        let v_i16: i16 = Default::default();
+        let v_i32: i32 = Default::default();
+        let v_i64: i64 = Default::default();
+        let v_i128: i128 = Default::default();
+        let v_isize: isize = Default::default();
+        let v_str: &str = Default::default();
+        let v_u8: u8 = Default::default();
+        let v_u16: u16 = Default::default();
+        let v_u32: u32 = Default::default();
+        let v_u64: u64 = Default::default();
+        let v_u128: u128 = Default::default();
+        let v_usize: usize = Default::default();
+
+        assert_eq!(value_typed!(v_bool).identifier(), "bool");
+        assert_eq!(value_typed!(v_f32).identifier(), "f32");
+        assert_eq!(value_typed!(v_f64).identifier(), "f64");
+        assert_eq!(value_typed!(v_i8).identifier(), "i8");
+        assert_eq!(value_typed!(v_i16).identifier(), "i16");
+        assert_eq!(value_typed!(v_i32).identifier(), "i32");
+        assert_eq!(value_typed!(v_i64).identifier(), "i64");
+        assert_eq!(value_typed!(v_i128).identifier(), "i128");
+        assert_eq!(value_typed!(v_isize).identifier(), "isize");
+        assert_eq!(value_typed!(*v_str).identifier(), "str");
+        assert_eq!(value_typed!(v_u8).identifier(), "u8");
+        assert_eq!(value_typed!(v_u16).identifier(), "u16");
+        assert_eq!(value_typed!(v_u32).identifier(), "u32");
+        assert_eq!(value_typed!(v_u64).identifier(), "u64");
+        assert_eq!(value_typed!(v_u128).identifier(), "u128");
+        assert_eq!(value_typed!(v_usize).identifier(), "usize");
+    }
+
+    #[test]
+    fn typed_unknown_value() {
+        struct Untyped;
+        let untyped: Untyped = Untyped;
+
+        assert_eq!(value_typed!(untyped).identifier(), "<unknown>");
     }
 }

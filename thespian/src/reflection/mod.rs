@@ -11,4 +11,4 @@ pub use associated_function::AssociatedFunction;
 pub use associated_type::AssociatedType;
 pub use r#trait::Trait;
 pub use r#type::Type;
-pub use typed::Typed;
+pub use typed::{Typed, TypeWrapper};
