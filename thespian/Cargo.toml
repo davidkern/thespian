@@ -15,4 +15,4 @@ categories = ["concurrency"]
 maintenance = { status = "experimental" }
 
 [dependencies]
-
+slab = "0.4"

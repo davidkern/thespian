@@ -41,7 +41,7 @@ impl_typed!(usize);
 
 #[cfg(test)]
 mod test {
-    use crate::{typed, value_typed};
+    use crate::{typed, ty};
 
     #[test]
     fn typed_primitives() {
@@ -89,22 +89,22 @@ mod test {
         let v_u128: u128 = Default::default();
         let v_usize: usize = Default::default();
 
-        assert_eq!(value_typed!(v_bool).identifier(), "bool");
-        assert_eq!(value_typed!(v_f32).identifier(), "f32");
-        assert_eq!(value_typed!(v_f64).identifier(), "f64");
-        assert_eq!(value_typed!(v_i8).identifier(), "i8");
-        assert_eq!(value_typed!(v_i16).identifier(), "i16");
-        assert_eq!(value_typed!(v_i32).identifier(), "i32");
-        assert_eq!(value_typed!(v_i64).identifier(), "i64");
-        assert_eq!(value_typed!(v_i128).identifier(), "i128");
-        assert_eq!(value_typed!(v_isize).identifier(), "isize");
-        assert_eq!(value_typed!(*v_str).identifier(), "str");
-        assert_eq!(value_typed!(v_u8).identifier(), "u8");
-        assert_eq!(value_typed!(v_u16).identifier(), "u16");
-        assert_eq!(value_typed!(v_u32).identifier(), "u32");
-        assert_eq!(value_typed!(v_u64).identifier(), "u64");
-        assert_eq!(value_typed!(v_u128).identifier(), "u128");
-        assert_eq!(value_typed!(v_usize).identifier(), "usize");
+        assert_eq!(ty!(v_bool).identifier(), "bool");
+        assert_eq!(ty!(v_f32).identifier(), "f32");
+        assert_eq!(ty!(v_f64).identifier(), "f64");
+        assert_eq!(ty!(v_i8).identifier(), "i8");
+        assert_eq!(ty!(v_i16).identifier(), "i16");
+        assert_eq!(ty!(v_i32).identifier(), "i32");
+        assert_eq!(ty!(v_i64).identifier(), "i64");
+        assert_eq!(ty!(v_i128).identifier(), "i128");
+        assert_eq!(ty!(v_isize).identifier(), "isize");
+        assert_eq!(ty!(*v_str).identifier(), "str");
+        assert_eq!(ty!(v_u8).identifier(), "u8");
+        assert_eq!(ty!(v_u16).identifier(), "u16");
+        assert_eq!(ty!(v_u32).identifier(), "u32");
+        assert_eq!(ty!(v_u64).identifier(), "u64");
+        assert_eq!(ty!(v_u128).identifier(), "u128");
+        assert_eq!(ty!(v_usize).identifier(), "usize");
     }
 
     #[test]
@@ -112,6 +112,6 @@ mod test {
         struct Untyped;
         let untyped: Untyped = Untyped;
 
-        assert_eq!(value_typed!(untyped).identifier(), "<unknown>");
+        assert_eq!(ty!(untyped).identifier(), "<unknown>");
     }
 }

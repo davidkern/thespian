@@ -58,7 +58,7 @@ macro_rules! typed {
 
 /// Get the Type trait object for a value.
 #[macro_export]
-macro_rules! value_typed {
+macro_rules! ty {
     ($e:expr) => {
         {
             use crate::reflection::{Typed, TypeWrapper};
