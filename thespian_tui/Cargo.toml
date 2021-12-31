@@ -1,0 +1,11 @@
+[package]
+name = "thespian-tui"
+version = "0.1.0"
+authors = ["David Kern <david@mju.io>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+thespian = { path = "../thespian" }
