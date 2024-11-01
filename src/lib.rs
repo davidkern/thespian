@@ -45,30 +45,30 @@ const _: () = {
         Get(mpsc::Sender<Option<usize>>),
     }
 
-    pub struct Proxy {
-        sender: mpsc::Sender<Message>,
+    pub struct Capability {
+        input: mpsc::Sender<Message>,
     }
 
     impl Thespian for Actor {
-        type Proxy = Proxy;
+        type Capability = Capability;
 
-        fn spawn(self, _rt: Runtime) -> Self::Proxy {
+        fn spawn(self, _rt: Runtime) -> Self::Capability {
             let (tx, rx) = mpsc::channel();
 
             std::thread::spawn(move || {
                 run(self, rx)
             });
 
-            Proxy {
-                sender: tx,
+            Capability {
+                input: tx,
             }
         }
     }
 
-    impl Memory for Proxy {
+    impl Memory for Capability {
         fn get(&self) -> Option<usize> {
             let (tx, rx) = mpsc::channel();
-            let _ = self.sender.send(Message::Get(tx));
+            let _ = self.input.send(Message::Get(tx));
 
             // TODO: implement recovery to deal with errors
             rx.recv().unwrap()
@@ -76,7 +76,7 @@ const _: () = {
 
         fn set(&mut self, value: Option<usize>) {
             // TODO: implement recovery to deal with errors
-            let _ = self.sender.send(Message::Set(value));
+            let _ = self.input.send(Message::Set(value));
         }
     }
 
@@ -98,9 +98,9 @@ pub mod runtime {
     pub struct Runtime;
 
     pub trait Thespian: Sized {
-        type Proxy;
+        type Capability;
 
-        fn spawn(self, rt: Runtime) -> Self::Proxy;
+        fn spawn(self, rt: Runtime) -> Self::Capability;
     }
 
     pub struct Return<T>(std::marker::PhantomData<T>);
